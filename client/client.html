@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- import the websocket client library. You can code websockets from scratch
+         but we will just import a library. In this case we are using socket.io which is 
+         one of the most popular and feature rich websocket libraries.
+         
+         You can point the src for the script to any host online, but
+         by default the socket.io nodejs library will host the client library
+         online at your node.js address under /socket.io/socket.io.js 
+         You can disable that on the server if desired
+    -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/babel">
+
+        const socket = io.connect();
+        var playerDollarNum = 0;
+        var totalDollars = 0;
+        var multiplier = 1;
+        var currentClickValue = 1;
+        socket.on('connect', () => {
+           console.log('connecting');
+           socket.emit('join');
+        });
+        
+         socket.on('disconnect', (data)=> {
+           console.log(data); 
+        });
+        
+        const dollarButton = document.querySelector("#dollar");
+
+        dollarButton.addEventListener('click', () =>{
+            playerDollarNum += currentClickValue;
+            socket.emit('dollarClicked',currentClickValue);
+            document.getElementById("playerDollars").innerHTML = playerDollarNum;
+            document.getElementById("playerDollarsPerClick").innerHTML = currentClickValue;
+            console.dir(playerDollarNum);
+        });
+
+        const upgradeButton1 = document.querySelector("#upgradeDollars");
+
+        upgradeButton1.addEventListener('click',() =>
+        {
+            
+             if(playerDollarNum >  parseInt(document.getElementById("upgradeDollars").value) )
+                {
+                    var subtractValue = parseInt(document.getElementById("upgradeDollars").value) ;
+                    playerDollarNum -=  subtractValue;
+                    currentClickValue += 1;
+                    document.getElementById("upgradeDollars").value = Math.floor(subtractValue * 1.5);
+                    document.getElementById("upgradeCost").innerHTML = "Cost: $" + Math.floor(subtractValue * 1.5);
+                    document.getElementById("playerDollars").innerHTML = playerDollarNum; 
+                    
+                }
+           
+            
+        });
+
+        const upgradeButton2 = document.querySelector("#upgradeDollars2");
+
+        upgradeButton2.addEventListener('click',() =>
+        {
+             if(totalDollars >  parseInt(document.getElementById("upgradeDollars").value) )
+                {
+                    var subtractValue = parseInt(document.getElementById("upgradeDollars2").value) ;
+                    totalDollars -=  subtractValue;
+                    currentClickValue += 1;
+                    document.getElementById("upgradeDollars2").value = Math.floor(subtractValue * 1.5);
+                    document.getElementById("upgradeCost2").innerHTML = "Cost: $" + Math.floor(subtractValue * 1.5);
+                    document.getElementById("totalDollars").innerHTML = totalDollars; 
+                    socket.emit('buyServerUpgrade', subtractValue );
+                }
+           
+            
+        });
+        const updateTotal = (data) => {  
+            totalDollars = data;
+            document.getElementById("totalDollars").innerHTML = data;
+        };
+        
+        socket.on('updatedTotalClicks',updateTotal);
+    
+    </script>
+</head>
+<body>
+    <h1>Dollars/Click: <span id="playerDollarsPerClick">1</span></h1>
+    <input id="dollar" type="image" src="/assets/dollar.jpg" alt="Dollar sign">
+    <h1>Total Player Dollars: $<span id="playerDollars">0</span></h1>
+    <h1>Total Server Dollars: $<span id="totalDollars">0</span></h1>
+    
+    <div>
+    <h1 id="upgradeCost">Cost: $25 Player Dollars</h1>
+    <button id="upgradeDollars" type="button" value="25">Dollars/click +1</button>
+    </div>
+    
+     <div>
+    <h1 id="upgradeCost2">Cost: $200 Server Dollars</h1>
+    <button id="upgradeDollars2" type="button" value="200">All Players X2 multiplier to dollars/click</button>
+    </div>
+    
+    
+</body>
+</html>
