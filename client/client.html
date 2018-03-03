@@ -12,30 +12,65 @@
     -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" type="text/css" href="/css/style.css"/>
     <script type="text/babel">
 
+        var numberOfAutoClickers = 0;
+        const connectSocket = (e) => {
         const socket = io.connect();
+        const message = document.querySelector("#message");
+        const chat = document.querySelector("#chat");
         var playerDollarNum = 0;
         var totalDollars = 0;
         var multiplier = 1;
         var currentClickValue = 1;
+        
         socket.on('connect', () => {
            console.log('connecting');
-           socket.emit('join');
+            var user = document.querySelector("#username").value;
+            if(!user) {
+                user = 'unknown';
+            }
+            socket.emit('join',{name: user });
         });
         
          socket.on('disconnect', (data)=> {
            console.log(data); 
+           chat.innerHTML += data.name + ': ' + data.msg + '\n';
+        });
+           const sendBtn = document.querySelector("#send");
+        sendBtn.addEventListener('click', () =>{
+            socket.emit('msgToServer',{msg: message.value});
         });
         
+        socket.on('msg', (data)=> {
+           console.log(data); 
+            chat.innerHTML += data.name + ': ' + data.msg + '\n';
+        });
+        
+        socket.on('boughtServerUpgradeMsg', (data)=> {
+           console.log(data); 
+            chat.innerHTML += data.name + ': doubled your dollars/click! \n';
+        });
+    
         const dollarButton = document.querySelector("#dollar");
 
         dollarButton.addEventListener('click', () =>{
+            
             playerDollarNum += currentClickValue;
             socket.emit('dollarClicked',currentClickValue);
             document.getElementById("playerDollars").innerHTML = playerDollarNum;
             document.getElementById("playerDollarsPerClick").innerHTML = currentClickValue;
-            console.dir(playerDollarNum);
+            console.log(totalDollars);
+        });
+
+        dollarButton.addEventListener('mousedown', () =>{
+            dollarButton.width = 207;
+            dollarButton.height = 310;
+        });
+        dollarButton.addEventListener('mouseup', () =>{
+            dollarButton.width = 247;
+            dollarButton.height = 350;
         });
 
         const upgradeButton1 = document.querySelector("#upgradeDollars");
@@ -48,10 +83,10 @@
                     var subtractValue = parseInt(document.getElementById("upgradeDollars").value) ;
                     playerDollarNum -=  subtractValue;
                     currentClickValue += 1;
-                    document.getElementById("upgradeDollars").value = Math.floor(subtractValue * 1.5);
-                    document.getElementById("upgradeCost").innerHTML = "Cost: $" + Math.floor(subtractValue * 1.5);
+                    document.getElementById("upgradeDollars").value = Math.floor(subtractValue * 2);
+                    document.getElementById("upgradeCost").innerHTML = "Cost: $" + Math.floor(subtractValue * 2);
                     document.getElementById("playerDollars").innerHTML = playerDollarNum; 
-                    
+                    document.getElementById("playerDollarsPerClick").innerHTML = currentClickValue;
                 }
            
             
@@ -61,42 +96,136 @@
 
         upgradeButton2.addEventListener('click',() =>
         {
-             if(totalDollars >  parseInt(document.getElementById("upgradeDollars").value) )
+             if(totalDollars >  parseInt(document.getElementById("upgradeDollars2").value) )
                 {
                     var subtractValue = parseInt(document.getElementById("upgradeDollars2").value) ;
                     totalDollars -=  subtractValue;
-                    currentClickValue += 1;
-                    document.getElementById("upgradeDollars2").value = Math.floor(subtractValue * 1.5);
-                    document.getElementById("upgradeCost2").innerHTML = "Cost: $" + Math.floor(subtractValue * 1.5);
+                    //currentClickValue *= 2;
+                    document.getElementById("upgradeDollars2").value = Math.floor(subtractValue * 6);
+                    document.getElementById("upgradeCost2").innerHTML = "Cost: $" + Math.floor(subtractValue * 6);
                     document.getElementById("totalDollars").innerHTML = totalDollars; 
-                    socket.emit('buyServerUpgrade', subtractValue );
+                    socket.emit('subtractServerMoney', subtractValue );
+                    socket.emit('upgradeServer',currentClickValue);
+                    console.log(subtractValue);
                 }
            
             
         });
+        
+        const autoClickerButton = document.querySelector("#autoClickerButton");
+
+        autoClickerButton.addEventListener('click',() =>
+        {
+             if(playerDollarNum >  parseInt(document.getElementById("autoClickerButton").value) && numberOfAutoClickers < 6 )
+                {
+                    var subtractValue = parseInt(document.getElementById("autoClickerButton").value) ;
+                    numberOfAutoClickers += 1;
+                    playerDollarNum -= subtractValue;
+                    document.getElementById("autoClickerButton").value = Math.floor(subtractValue * 6);
+                    document.getElementById("autoClickerCost").innerHTML = "Cost: $" + Math.floor(subtractValue * 6);
+                    if(numberOfAutoClickers > 0)
+                        {
+                window.setInterval(autoClickerActivate,5000,numberOfAutoClickers);
+                        }
+                    console.dir(playerDollarNum);
+                }
+        });
+            
+        const halfButton = document.querySelector("#halfButton");
+
+        halfButton.addEventListener('click',() =>
+        {
+             if(playerDollarNum >  parseInt(document.getElementById("upgradeDollars").value) )
+                {
+                    var subtractValue = parseInt(document.getElementById("halfButton").value) ;
+                    playerDollarNum -=  subtractValue;
+                    document.getElementById("halfButton").value = Math.floor(subtractValue * 5);
+                    document.getElementById("halfCost").innerHTML = "Cost: $" + Math.floor(subtractValue * 5);
+                    document.getElementById("playerDollars").innerHTML = playerDollarNum; 
+                    socket.emit("halfPlayerMoney",playerDollarNum);
+                }
+            
+        });
+        
+
+        function autoClickerActivate(autoClickNum)
+        {
+            var multiplied = currentClickValue * autoClickNum;
+            playerDollarNum += multiplied;
+            socket.emit('dollarClicked',multiplied);
+            document.getElementById("playerDollars").innerHTML = playerDollarNum; 
+            
+        };
+
         const updateTotal = (data) => {  
             totalDollars = data;
             document.getElementById("totalDollars").innerHTML = data;
         };
-        
+
+        const updateClickValue = (data) => {  
+            currentClickValue = data;
+            document.getElementById("playerDollarsPerClick").innerHTML = data;
+        };
+            
+         const halfMoney = (data) => {  
+            playerDollarNum = data;
+            document.getElementById("playerDollars").innerHTML = data;
+        };
         socket.on('updatedTotalClicks',updateTotal);
+        socket.on('updatedClickValue',updateClickValue);
+        socket.on('moneyHalved',halfMoney);
+};
+        const init = () => {
+            const connect = document.querySelector("#connect");
+            connect.addEventListener('click', connectSocket);
+        };
+
+        window.onload = init;
     
     </script>
 </head>
 <body>
     <h1>Dollars/Click: <span id="playerDollarsPerClick">1</span></h1>
-    <input id="dollar" type="image" src="/assets/dollar.jpg" alt="Dollar sign">
-    <h1>Total Player Dollars: $<span id="playerDollars">0</span></h1>
-    <h1>Total Server Dollars: $<span id="totalDollars">0</span></h1>
-    
-    <div>
-    <h1 id="upgradeCost">Cost: $25 Player Dollars</h1>
-    <button id="upgradeDollars" type="button" value="25">Dollars/click +1</button>
+    <div id="dollarDiv">
+    <input style="margin: 0 auto" id="dollar" type="image" src="/assets/dollar.png" alt="Dollar sign">
+    <h1>Enter your username to start!</h1>
     </div>
     
-     <div>
-    <h1 id="upgradeCost2">Cost: $200 Server Dollars</h1>
-    <button id="upgradeDollars2" type="button" value="200">All Players X2 multiplier to dollars/click</button>
+    <div id="totalDiv">
+    <h1>Total Player Dollars: $<span id="playerDollars">0</span></h1>
+    <h1>Total Server Dollars: $<span id="totalDollars">0</span></h1>
+    </div>
+    
+    <div id="upgradeDiv1">
+    <h1 id="upgradeCost">Cost: $25 Player Dollars</h1>
+    <button class="button" id="upgradeDollars" type="button" value="25">Dollars/click +1</button>
+    </div>
+    
+     <div id="upgradeDiv2">
+    <h1 id="upgradeCost2">Cost: $500 Server Dollars</h1>
+    <button class="button" id="upgradeDollars2" type="button" value="500">All Players X2 multiplier to dollars/click</button>
+    </div>
+    
+    <div id="autoClickerDiv">
+    <h1 id="autoClickerCost">Cost: $500 Player Dollars (Hover over for details)</h1>
+    <button class="button" id="autoClickerButton" type="button" value="500" title="Clicks the dollar sign once every 5 seconds. Max of 5.">+1 Auto Clicker</button>
+    </div>
+    
+    <div id="halfDiv">
+    <h1 id="halfCost">Cost: $1000 Player Dollars</h1>
+    <button class="button" id="halfButton" type="button" value="1"> Halve all other player's money!</button>
+    </div>
+    
+    <div>
+    <label id="usernameText" for="user">Username:</label>
+	<input id="username" name="user" type="text"/>
+	<input id="connect" type='button' value='connect'/>
+	<label id="messageText" for="message">Message:</label>
+	<input id="message" name="message" type="text"/>
+	<input id="send" type="button" value="send" />
+	<br/>
+    
+	<textarea id="chat" rows="28" cols="75" readonly> </textarea>
     </div>
     
     

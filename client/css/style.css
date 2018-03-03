@@ -1,0 +1,81 @@
+@font-face{
+    font-family: dollarFont;
+    src: url("Dollar Bill.ttf");
+}
+
+.button {
+    font-family: dollarFont;
+    background-color: #4CAF50;
+    border: none;
+    color: black;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+    font-size: 1.75em;
+    margin: 0 auto;
+    cursor: pointer;
+    position: static;
+    float: right;
+}
+
+h1{
+    font-family: dollarFont;
+    font-size: 1.5em;
+    margin: 0 auto;
+}
+
+#dollarDiv{
+    display: block;
+    margin: 0 auto;
+    float: left;
+}
+
+#totalDiv{
+    text-align: center;
+    float:right;
+}
+
+#upgradeDiv1{
+    display: block;
+    margin: 25px;
+    float: right;
+    clear: right;
+    text-align: center;
+}
+
+#upgradeDiv2{
+    display: block;
+    margin: 25px;
+    float: right;
+    clear: right;
+    text-align: center;
+}
+
+#autoClickerDiv{
+    display: block;
+    margin: 25px;
+    float: right;
+    clear: right;
+    text-align: center;
+}
+
+#halfDiv{
+    display: block;
+    margin: 25px;
+    float: right;
+    clear: right;
+    text-align: center;
+}
+
+
+/*Couldn't put the tag on the div because that broke functionality */
+#usernameText,#username,#connect,#messageText,#message,#send,#chat{
+    display: block;
+    float:left;
+    clear:both;
+}
+
+body{
+    background-color: #85FF92;
+}
