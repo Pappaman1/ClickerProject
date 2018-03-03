@@ -25,6 +25,7 @@
         var multiplier = 1;
         var currentClickValue = 1;
         
+        //handles someone joining the server
         socket.on('connect', () => {
            console.log('connecting');
             var user = document.querySelector("#username").value;
@@ -34,40 +35,46 @@
             socket.emit('join',{name: user });
         });
         
-         socket.on('disconnect', (data)=> {
+        //handles someone disconnecting from the server
+        socket.on('disconnect', (data)=> {
            console.log(data); 
            chat.innerHTML += data.name + ': ' + data.msg + '\n';
         });
-           const sendBtn = document.querySelector("#send");
+            
+        //handles the events for when the send button is clicked
+        const sendBtn = document.querySelector("#send");
         sendBtn.addEventListener('click', () =>{
             socket.emit('msgToServer',{msg: message.value});
         });
         
+        //handles the events for when the client receives a msg event
         socket.on('msg', (data)=> {
-           console.log(data); 
             chat.innerHTML += data.name + ': ' + data.msg + '\n';
         });
         
+        //handles the events for when the client receives a boughtServerUpgradeMsg event
         socket.on('boughtServerUpgradeMsg', (data)=> {
-           console.log(data); 
             chat.innerHTML += data.name + ': doubled your dollars/click! \n';
         });
     
         const dollarButton = document.querySelector("#dollar");
 
-        dollarButton.addEventListener('click', () =>{
-            
+        //handles the events for when the dollar button is clicked
+        dollarButton.addEventListener('click', () =>
+        {
             playerDollarNum += currentClickValue;
             socket.emit('dollarClicked',currentClickValue);
             document.getElementById("playerDollars").innerHTML = playerDollarNum;
             document.getElementById("playerDollarsPerClick").innerHTML = currentClickValue;
-            console.log(totalDollars);
         });
 
+        //decreases button size when mouse is down
         dollarButton.addEventListener('mousedown', () =>{
             dollarButton.width = 207;
             dollarButton.height = 310;
         });
+            
+        //increases button size when mouse is up
         dollarButton.addEventListener('mouseup', () =>{
             dollarButton.width = 247;
             dollarButton.height = 350;
@@ -75,6 +82,8 @@
 
         const upgradeButton1 = document.querySelector("#upgradeDollars");
 
+         //handles the button press for when the upgradeDollars button is clicked
+        //it increases the value of the button and handles cost
         upgradeButton1.addEventListener('click',() =>
         {
             
@@ -94,6 +103,9 @@
 
         const upgradeButton2 = document.querySelector("#upgradeDollars2");
 
+            
+        //handles the button press for when the upgradeDollars2 button is clicked
+        //it increases the value of the button and handles cost
         upgradeButton2.addEventListener('click',() =>
         {
              if(totalDollars >  parseInt(document.getElementById("upgradeDollars2").value) )
@@ -106,7 +118,6 @@
                     document.getElementById("totalDollars").innerHTML = totalDollars; 
                     socket.emit('subtractServerMoney', subtractValue );
                     socket.emit('upgradeServer',currentClickValue);
-                    console.log(subtractValue);
                 }
            
             
@@ -114,6 +125,8 @@
         
         const autoClickerButton = document.querySelector("#autoClickerButton");
 
+        //handles the button press for when the autoClickerButton is clicked
+        //it increases the value of the button and handles cost
         autoClickerButton.addEventListener('click',() =>
         {
              if(playerDollarNum >  parseInt(document.getElementById("autoClickerButton").value) && numberOfAutoClickers < 6 )
@@ -127,12 +140,13 @@
                         {
                 window.setInterval(autoClickerActivate,5000,numberOfAutoClickers);
                         }
-                    console.dir(playerDollarNum);
                 }
         });
             
         const halfButton = document.querySelector("#halfButton");
 
+        //handles the button press for when the halfButton is clicked
+        //it increases the value of the button and handles cost
         halfButton.addEventListener('click',() =>
         {
              if(playerDollarNum >  parseInt(document.getElementById("upgradeDollars").value) )
@@ -147,7 +161,7 @@
             
         });
         
-
+        //sends dollarClicked event to server whenever the timer runs out
         function autoClickerActivate(autoClickNum)
         {
             var multiplied = currentClickValue * autoClickNum;
@@ -156,17 +170,20 @@
             document.getElementById("playerDollars").innerHTML = playerDollarNum; 
             
         };
-
+            
+        //updates the server total on the client
         const updateTotal = (data) => {  
             totalDollars = data;
             document.getElementById("totalDollars").innerHTML = data;
         };
 
+        //updates the player total on the client
         const updateClickValue = (data) => {  
             currentClickValue = data;
             document.getElementById("playerDollarsPerClick").innerHTML = data;
         };
             
+        //halves total on the client
          const halfMoney = (data) => {  
             playerDollarNum = data;
             document.getElementById("playerDollars").innerHTML = data;
@@ -213,7 +230,7 @@
     
     <div id="halfDiv">
     <h1 id="halfCost">Cost: $1000 Player Dollars</h1>
-    <button class="button" id="halfButton" type="button" value="1"> Halve all other player's money!</button>
+    <button class="button" id="halfButton" type="button" value="1000"> Halve all other player's money!</button>
     </div>
     
     <div>

@@ -29,6 +29,7 @@ server.listen(port, (err) => {
 let serverTotalClicks = 0;
 let currentClickValue = 0;
 
+//handles what happens when someone connects to the socket through the client
 const onJoined = (sock) => {
   const socket = sock;
   socket.on('join', (data) => {
@@ -56,6 +57,7 @@ const onJoined = (sock) => {
   });
 };
 
+//sends data to the chat
 const onMsg = (sock) => {
   const socket = sock;
   socket.on('msgToServer', (data) => {
@@ -63,6 +65,7 @@ const onMsg = (sock) => {
   });
 };
 
+//removes users from socket when they disconnect
 const onDisconnect = (sock) => {
   const socket = sock;
   socket.on('disconnect', (data) => {
@@ -76,6 +79,7 @@ const onDisconnect = (sock) => {
   });
 };
 
+//increases dollar amount when the dollar sign is clicked
 const dollarClicked = (sock) => {
   const socket = sock;
   socket.on('dollarClicked', (data) => {
@@ -84,6 +88,7 @@ const dollarClicked = (sock) => {
   });
 };
 
+//subtracts money from the server total
 const subtractServerMoney = (sock) => {
   const socket = sock;
   socket.on('subtractServerMoney', (data) => {
@@ -92,6 +97,7 @@ const subtractServerMoney = (sock) => {
   });
 };
 
+//upgrades everyones dollars/click
 const upgradeServer = (sock) => {
   const socket = sock;
   socket.on('upgradeServer', (data) => {
@@ -103,15 +109,17 @@ const upgradeServer = (sock) => {
   });
 };
 
+//halves every other players money
 const halfPlayerMoney = (sock) => {
-    const socket = sock;
-    socket.on('halfPlayerMoney', (data) => {
-        let halved = data;
-        halved /= 2;
-        socket.broadcast.to('room1').emit('moneyHalved', halved);
-    });
+  const socket = sock;
+  socket.on('halfPlayerMoney', (data) => {
+    let halved = data;
+    halved /= 2;
+    socket.broadcast.to('room1').emit('moneyHalved', halved);
+  });
 };
 
+//houses every function that is available to the
 io.sockets.on('connection', (socket) => {
   onJoined(socket);
   dollarClicked(socket);
